@@ -1,8 +1,13 @@
+// ignore_for_file: deprecated_member_use
+
+import 'package:eDrop/screens/map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../components/custom_header.dart';
 import 'booking/customer_info.dart';
 import 'booking/service_booking.dart'; // Import the new component
+import 'package:url_launcher/url_launcher.dart';
 
 class ServiceProviderDetailPage extends StatefulWidget {
   final String name;
@@ -70,6 +75,15 @@ class _ServiceProviderDetailPageState extends State<ServiceProviderDetailPage>
     setState(() {
       _isBookmarked = !_isBookmarked;
     });
+  }
+
+  void _launchMaps() async {
+    final url = 'google.navigation:q=${widget.latitude},${widget.longitude}';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not open the map.';
+    }
   }
 
   @override
@@ -341,7 +355,15 @@ class _ServiceProviderDetailPageState extends State<ServiceProviderDetailPage>
                                   .infinity, // Make button take full width
                               child: ElevatedButton(
                                 onPressed: () {
-                                  // Navigate to the Map page
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MapPage(
+                                        destination: LatLng(
+                                            widget.latitude, widget.longitude),
+                                      ),
+                                    ),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 16),

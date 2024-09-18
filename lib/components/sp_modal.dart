@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../screens/sp_detail_page.dart';
+
 class ServiceProviderModal extends StatelessWidget {
   final List<Map<String, dynamic>> _serviceProviders = [
-    {'name': 'Shiny Car Wash', 'lat': -6.780000, 'lng': 39.250000},
-    {'name': 'Sparkle Auto Wash', 'lat': -6.770000, 'lng': 39.260000},
-    {'name': 'Clean & Go Car Wash', 'lat': -6.760000, 'lng': 39.270000},
+    {'name': 'Shiny Car Wash', 'cuisine': 'Car Services', 'distance': '2.5 km', 'lat': -6.780000, 'lng': 39.250000, 'contactNumber': '123-456-7890'},
+    {'name': 'Sparkle Auto Wash', 'cuisine': 'Car Services', 'distance': '3.1 km', 'lat': -6.770000, 'lng': 39.260000, 'contactNumber': '987-654-3210'},
+    {'name': 'Clean & Go Car Wash', 'cuisine': 'Car Services', 'distance': '4.2 km', 'lat': -6.760000, 'lng': 39.270000, 'contactNumber': '555-123-4567'},
   ];
 
   @override
@@ -48,11 +50,23 @@ class ServiceProviderModal extends StatelessWidget {
                     return ListTile(
                       leading: Icon(Icons.local_car_wash, color: Colors.blue),
                       title: Text(provider['name']),
-                      subtitle: Text(
-                          'Lat: ${provider['lat']}, Lng: ${provider['lng']}'),
+                      subtitle: Text('Cuisine: ${provider['cuisine']} • ${provider['distance']}'),
                       onTap: () {
                         Navigator.pop(context);
-                        // Implement logic to navigate to the provider or highlight on map
+                        // Navigate to the ServiceProviderDetailPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ServiceProviderDetailPage(
+                              name: provider['name'],
+                              cuisine: provider['cuisine'],
+                              distance: provider['distance'],
+                              latitude: provider['lat'],
+                              longitude: provider['lng'],
+                              contactNumber: provider['contactNumber'],
+                            ),
+                          ),
+                        );
                       },
                     );
                   },

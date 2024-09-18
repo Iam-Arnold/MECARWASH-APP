@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   final List<Widget> _pages = [
-    Map(),
+    MapPage(),
     CarWashHistoryPage(),
     UserProfilePage()
   ];
