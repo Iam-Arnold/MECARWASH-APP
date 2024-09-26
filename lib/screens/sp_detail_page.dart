@@ -353,45 +353,46 @@ class _ServiceProviderDetailPageState extends State<ServiceProviderDetailPage>
                             SizedBox(
                               width: double
                                   .infinity, // Make button take full width
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MapPage(
-                                        destination: LatLng(
-                                            widget.latitude, widget.longitude),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blueAccent,
+                                      Colors.lightBlueAccent,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  elevation: 5,
-                                  backgroundColor: Colors.blue,
-                                  shadowColor: Colors.blue.withOpacity(0.2),
-                                ).copyWith(
-                                  backgroundColor:
-                                      MaterialStateProperty.resolveWith(
-                                          (states) {
-                                    LinearGradient(
-                                      colors: [
-                                        Colors.blueAccent,
-                                        Colors.lightBlueAccent
-                                      ],
-                                    ).createShader(
-                                        Rect.fromLTWH(0, 0, 200, 70));
-                                  }),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Text(
-                                  'View on Map',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MapPage(
+                                          destination: LatLng(widget.latitude,
+                                              widget.longitude),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 5,
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.blue.withOpacity(0.1),
+                                  ),
+                                  child: Text(
+                                    'View on Map',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),

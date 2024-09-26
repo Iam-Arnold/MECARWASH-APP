@@ -38,7 +38,7 @@ class OnboardingPage extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Fast, Reliable Car Washes at Your Fingertips',
+                  'Fast, Reliable Car Washes',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,

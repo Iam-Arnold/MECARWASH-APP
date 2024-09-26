@@ -328,102 +328,105 @@ class _SignupLoginPageState extends State<SignupLoginPage> {
   }
 
   // Signup Form
+// Signup Form
   Widget _buildSignupForm(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Form(
-        key: _signupFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextFormField(
-              controller: _signupPhoneController,
-              decoration: InputDecoration(
-                labelText: 'Phone Number',
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.lightBlueAccent,
-                    width: 2.0,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: _signupFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: _signupPhoneController,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.lightBlueAccent,
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey,
+                      width: 1.0,
+                    ),
                   ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                    width: 1.0,
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  return validatePhoneNumber(value ?? '');
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: _signupPasswordController,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.lightBlueAccent,
+                      width: 2.0,
+                    ),
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey,
+                      width: 1.0,
+                    ),
+                  ),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  return validatePassword(value);
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: _signupConfirmPasswordController,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.lightBlueAccent,
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey,
+                      width: 1.0,
+                    ),
+                  ),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  return validateConfirmPassword(value);
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () =>
+                    _handleRegister(context), // Call register handler
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlueAccent,
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: Text(
+                  'Register',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
-              keyboardType: TextInputType.phone,
-              validator: (value) {
-                return validatePhoneNumber(value ?? '');
-              },
-            ),
-            SizedBox(height: 20),
-            TextFormField(
-              controller: _signupPasswordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.lightBlueAccent,
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              obscureText: true,
-              validator: (value) {
-                return validatePassword(value);
-              },
-            ),
-            SizedBox(height: 20),
-            TextFormField(
-              controller: _signupConfirmPasswordController,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.lightBlueAccent,
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              obscureText: true,
-              validator: (value) {
-                return validateConfirmPassword(value);
-              },
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () =>
-                  _handleRegister(context), // Call register handler
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent,
-                padding: EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: Text(
-                'Register',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
