@@ -121,119 +121,117 @@ class _SignupLoginPageState extends State<SignupLoginPage> {
       child: Scaffold(
         body: Stack(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Blue background header with dynamic content
-                  Container(
-                    height: screenHeight * 0.4,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(
-                            'assets/car_washbg.jpg'), // Replace with your background image
-                        fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(
-                          Colors.black.withOpacity(0.4), // Blue overlay
-                          BlendMode.darken,
-                        ),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Animated text for dynamic header content
-                          AnimatedSwitcher(
-                            duration: Duration(milliseconds: 500),
-                            transitionBuilder:
-                                (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                  opacity: animation, child: child);
-                            },
-                            child: _selectedIndex == 0
-                                ? Column(
-                                    key: ValueKey<int>(_selectedIndex),
-                                    children: [
-                                      Text(
-                                        'Welcome Back!',
-                                        style: TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'Login to continue',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.white70,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    key: ValueKey<int>(_selectedIndex),
-                                    children: [
-                                      Text(
-                                        'Join Us Today!',
-                                        style: TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      SizedBox(height: 10),
-                                      Text(
-                                        'Register to get started',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.white70,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ],
+            Column(
+              children: [
+                // Blue background header with dynamic content
+                Container(
+                  height: screenHeight * 0.4,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(
+                          'assets/car_washbg.jpg'), // Replace with your background image
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.4), // Blue overlay
+                        BlendMode.darken,
                       ),
                     ),
                   ),
-
-                  // Tabs for switching between Login and Signup
-                  TabBar(
-                    onTap: _onTabTapped, // Change selected index on tab click
-                    labelColor: Colors.lightBlueAccent,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: Colors.lightBlueAccent,
-                    tabs: [
-                      Tab(text: 'Login'),
-                      Tab(text: 'Register'),
-                    ],
-                  ),
-
-                  // Form below the header using TabBarView
-                  Expanded(
-                    child: TabBarView(
-                      physics: NeverScrollableScrollPhysics(), // Prevent swipe
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLoginForm(context), // Login Form
-                        _buildSignupForm(context), // Signup Form
+                        // Animated text for dynamic header content
+                        AnimatedSwitcher(
+                          duration: Duration(milliseconds: 500),
+                          transitionBuilder:
+                              (Widget child, Animation<double> animation) {
+                            return FadeTransition(
+                                opacity: animation, child: child);
+                          },
+                          child: _selectedIndex == 0
+                              ? Column(
+                                  key: ValueKey<int>(_selectedIndex),
+                                  children: [
+                                    Text(
+                                      'Welcome Back!',
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'Login to continue',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white70,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  key: ValueKey<int>(_selectedIndex),
+                                  children: [
+                                    Text(
+                                      'Join Us Today!',
+                                      style: TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'Register to get started',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white70,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ],
                     ),
                   ),
+                ),
 
-                  // Show loading spinner while authenticating
-                  if (_isLoading)
-                    Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                ],
+                // Tabs for switching between Login and Signup
+                TabBar(
+                  onTap: _onTabTapped, // Change selected index on tab click
+                  labelColor: Colors.lightBlueAccent,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Colors.lightBlueAccent,
+                  tabs: [
+                    Tab(text: 'Login'),
+                    Tab(text: 'Register'),
+                  ],
+                ),
+
+                // Form below the header using TabBarView
+                Expanded(
+                  child: TabBarView(
+                    physics: NeverScrollableScrollPhysics(), // Prevent swipe
+                    children: [
+                      _buildLoginForm(context), // Login Form
+                      _buildSignupForm(context), // Signup Form
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Show loading spinner while authenticating
+            if (_isLoading)
+              Center(
+                child: CircularProgressIndicator(),
               ),
-            )
           ],
         ),
       ),
