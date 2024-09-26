@@ -48,25 +48,25 @@ class _MapPageState extends State<MapPage> {
           desiredAccuracy: LocationAccuracy.high);
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
-        // Add a blue circle to indicate current location with fading radius
+        // Add a blue circle to indicate current location
         _circles.add(
           Circle(
             circleId: CircleId('current_location'),
             center: _currentPosition!,
-            radius: 10000, // 100 meter radius
+            radius: 20, // 100 meter radius
             fillColor: Colors.blue.withOpacity(0.3),
             strokeColor: Colors.blueAccent,
             strokeWidth: 10,
           ),
         );
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(_currentPosition!, 22),
-        );
+        // _mapController?.animateCamera(
+        //   CameraUpdate.newLatLngZoom(_currentPosition!, 19),
+        // );
       });
 
       _fetchNearbyPlaces();
 
-      // Start navigation only if destination is provided
+      // Start navigation only if destination or distance is provided
       if (widget.destination != null) {
         _startNavigation(widget.destination!);
       }
@@ -76,27 +76,50 @@ class _MapPageState extends State<MapPage> {
               locationSettings:
                   LocationSettings(accuracy: LocationAccuracy.high))
           .listen((Position newPosition) {
-        _currentPosition = LatLng(newPosition.latitude, newPosition.longitude);
         setState(() {
+          _currentPosition =
+              LatLng(newPosition.latitude, newPosition.longitude);
           // Update the blue circle to follow the new current location
           _circles = {
             Circle(
               circleId: CircleId('current_location'),
               center: _currentPosition!,
-              radius: 10000,
+              radius: 20,
               fillColor: Colors.blue.withOpacity(0.3),
               strokeColor: Colors.blueAccent,
               strokeWidth: 2,
             ),
           };
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLng(_currentPosition!),
-          );
+          // _mapController?.animateCamera(
+          //   CameraUpdate.newLatLng(_currentPosition!),
+          // );
         });
+
+        // Recalculate route when the current location or distance changes
+        if (widget.destination != null || distanceVariableAvailable()) {
+          _startNavigation(widget.destination ?? _getDestinationFromDistance());
+        }
       });
     } catch (e) {
-      print('Error getting location: $e');
+      //print('Error getting location: $e');
     }
+  }
+
+  LatLng _getDestinationFromDistance() {
+    if (distanceVariableAvailable()) {
+      // Example logic: Assuming you have a certain distance (in km) to compute destination
+      // Adjust the destination calculation based on your logic.
+      double newLatitude =
+          _currentPosition!.latitude + 0.01; // For example purposes
+      double newLongitude = _currentPosition!.longitude + 0.01;
+      return LatLng(newLatitude, newLongitude);
+    }
+    return widget.destination!;
+  }
+
+  bool distanceVariableAvailable() {
+    // Replace with your logic to check if distance variable is available
+    return false; // Example value
   }
 
   Future<void> _fetchNearbyPlaces() async {
@@ -119,6 +142,7 @@ class _MapPageState extends State<MapPage> {
         final List<dynamic> places = data['results'];
 
         setState(() {
+          _markers.clear(); // Clear old markers
           for (var place in places) {
             final LatLng placeLocation = LatLng(
               place['geometry']['location']['lat'],
@@ -170,6 +194,7 @@ class _MapPageState extends State<MapPage> {
           final polyline = _convertToLatLng(polylinePoints);
 
           setState(() {
+            _polylines.clear(); // Clear previous polylines
             _polylines.add(
               Polyline(
                 polylineId: PolylineId('route'),
@@ -191,32 +216,32 @@ class _MapPageState extends State<MapPage> {
             );
           });
 
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLngBounds(
-              LatLngBounds(
-                southwest: LatLng(
-                  _currentPosition!.latitude < destination.latitude
-                      ? _currentPosition!.latitude
-                      : destination.latitude,
-                  _currentPosition!.longitude < destination.longitude
-                      ? _currentPosition!.longitude
-                      : destination.longitude,
-                ),
-                northeast: LatLng(
-                  _currentPosition!.latitude > destination.latitude
-                      ? _currentPosition!.latitude
-                      : destination.latitude,
-                  _currentPosition!.longitude > destination.longitude
-                      ? _currentPosition!.longitude
-                      : destination.longitude,
-                ),
-              ),
-              50, // Padding
-            ),
-          );
+          // _mapController?.animateCamera(
+          //   CameraUpdate.newLatLngBounds(
+          //     LatLngBounds(
+          //       southwest: LatLng(
+          //         _currentPosition!.latitude < destination.latitude
+          //             ? _currentPosition!.latitude
+          //             : destination.latitude,
+          //         _currentPosition!.longitude < destination.longitude
+          //             ? _currentPosition!.longitude
+          //             : destination.longitude,
+          //       ),
+          //       northeast: LatLng(
+          //         _currentPosition!.latitude > destination.latitude
+          //             ? _currentPosition!.latitude
+          //             : destination.latitude,
+          //         _currentPosition!.longitude > destination.longitude
+          //             ? _currentPosition!.longitude
+          //             : destination.longitude,
+          //       ),
+          //     ),
+          //     50, // Padding
+          //   ),
+          // );
         }
       } else {
-       // print('Failed to get directions: ${response.statusCode}');
+        //print('Failed to get directions: ${response.statusCode}');
       }
     } catch (e) {
       //print('Error getting directions: $e');
@@ -270,10 +295,18 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+
+    // Apply custom map style
+    _mapController!.setMapStyle(MapStyle.style);
+
     setState(() {
-      _mapController = controller;
+      if (_currentPosition != null) {
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_currentPosition!, 22),
+        );
+      }
     });
-    _mapController?.setMapStyle(MapStyle.style);
   }
 
   void _onSearchActive(bool isActive) {
@@ -335,10 +368,11 @@ class _MapPageState extends State<MapPage> {
             onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
               target: _center,
-              zoom: 16.0,
+              zoom: 15.5,
             ),
             markers: _markers,
             polylines: _polylines,
+            circles: _circles,
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
           ),

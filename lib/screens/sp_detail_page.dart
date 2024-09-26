@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:eDrop/screens/map.dart';
+import '../screens/map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -371,7 +371,7 @@ class _ServiceProviderDetailPageState extends State<ServiceProviderDetailPage>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   elevation: 5,
-                                  backgroundColor: Colors.transparent,
+                                  backgroundColor: Colors.blue,
                                   shadowColor: Colors.blue.withOpacity(0.2),
                                 ).copyWith(
                                   backgroundColor:

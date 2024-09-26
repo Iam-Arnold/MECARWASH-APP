@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "843185095945",
+    "project_id": "Due-2ccfc",
+    "storage_bucket": "Due-2ccfc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843185095945:android:204610ad6a9543055b3fd8",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoG4yBjDr0QtQi_V-4SOeNUxfE-K6zF68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

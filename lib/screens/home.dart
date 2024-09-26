@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.local_car_wash_rounded),
-            label: 'mecarwash',
+            label: 'Due',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle_rounded),
