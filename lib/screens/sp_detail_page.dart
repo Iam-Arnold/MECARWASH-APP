@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../components/custom_header.dart';
 import 'booking/customer_info.dart';
-import 'booking/service_booking.dart'; // Import the new component
+import 'booking/service_booking.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ServiceProviderDetailPage extends StatefulWidget {

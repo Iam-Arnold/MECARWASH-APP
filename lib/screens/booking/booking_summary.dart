@@ -5,9 +5,17 @@ class BookingSummary extends StatefulWidget {
   final String service;
   final DateTime date;
   final TimeOfDay time;
+  final String userName; // New field: User name
+  final String userPhone; // New field: User phone number
+  final String address; // New field: Address
 
   BookingSummary(
-      {required this.service, required this.date, required this.time});
+      {required this.service,
+      required this.date,
+      required this.time,
+      required this.userName,
+      required this.userPhone,
+      required this.address});
 
   @override
   _BookingSummaryState createState() => _BookingSummaryState();
@@ -32,7 +40,15 @@ class _BookingSummaryState extends State<BookingSummary> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Service Information
+              // Display user information
+              Text('Name: ${widget.userName}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 10),
+              Text('Phone: ${widget.userPhone}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 10),
+              Text('Address: ${widget.address}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 20),
+
+              // Display service details
               Text('Service: ${widget.service}', style: TextStyle(fontSize: 18)),
               SizedBox(height: 10),
               Text('Date: ${widget.date.toLocal()}'.split(' ')[0],

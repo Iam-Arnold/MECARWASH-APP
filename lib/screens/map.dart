@@ -21,9 +21,10 @@ class _MapPageState extends State<MapPage> {
   GoogleMapController? _mapController;
   LatLng? _currentPosition;
   Set<Marker> _markers = Set<Marker>();
-  Set<Polyline> _polylines = Set<Polyline>(); // Store polylines for the route
-  Set<Circle> _circles = Set<Circle>(); // Store circle for current location
+  Set<Polyline> _polylines = Set<Polyline>();
+  Set<Circle> _circles = Set<Circle>();
   bool _isSearchActive = false;
+  bool _initialCameraSet = false;
 
   final LatLng _center = const LatLng(-6.778567437130798, 39.26381723392923);
 
@@ -34,218 +35,171 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _checkPermissions();
+    //     _mapController?.animateCamera(
+    //   CameraUpdate.newLatLngZoom(_currentPosition!, 16),
+    // );
   }
 
   Future<void> _checkPermissions() async {
-    if (await Permission.location.request().isGranted) {
+    final permission = await Permission.location.request();
+    if (permission.isGranted) {
       _getCurrentLocation();
+    } else {
+      // Handle permission denied scenario
     }
   }
 
   Future<void> _getCurrentLocation() async {
     try {
+      //developer.log('The destination details: $widget.destination');
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      setState(() {
-        _currentPosition = LatLng(position.latitude, position.longitude);
-        // Add a blue circle to indicate current location
-        _circles.add(
-          Circle(
-            circleId: CircleId('current_location'),
-            center: _currentPosition!,
-            radius: 20, // 100 meter radius
-            fillColor: Colors.blue.withOpacity(0.3),
-            strokeColor: Colors.blueAccent,
-            strokeWidth: 10,
-          ),
-        );
-        // _mapController?.animateCamera(
-        //   CameraUpdate.newLatLngZoom(_currentPosition!, 19),
-        // );
-      });
+      _updateCurrentLocation(LatLng(position.latitude, position.longitude));
 
-      _fetchNearbyPlaces();
-
-      // Start navigation only if destination or distance is provided
+      // Fetch nearby carwashes and start navigation if destination is provided
+      _fetchNearbyCarWashes();
       if (widget.destination != null) {
         _startNavigation(widget.destination!);
       }
 
-      // Continuously update current location and camera position
+      // Continuously update current location
       Geolocator.getPositionStream(
               locationSettings:
                   LocationSettings(accuracy: LocationAccuracy.high))
           .listen((Position newPosition) {
-        setState(() {
-          _currentPosition =
-              LatLng(newPosition.latitude, newPosition.longitude);
-          // Update the blue circle to follow the new current location
-          _circles = {
-            Circle(
-              circleId: CircleId('current_location'),
-              center: _currentPosition!,
-              radius: 20,
-              fillColor: Colors.blue.withOpacity(0.3),
-              strokeColor: Colors.blueAccent,
-              strokeWidth: 2,
-            ),
-          };
-          // _mapController?.animateCamera(
-          //   CameraUpdate.newLatLng(_currentPosition!),
-          // );
-        });
-
-        // Recalculate route when the current location or distance changes
-        if (widget.destination != null || distanceVariableAvailable()) {
-          _startNavigation(widget.destination ?? _getDestinationFromDistance());
+        _updateCurrentLocation(
+            LatLng(newPosition.latitude, newPosition.longitude));
+        if (widget.destination != null) {
+          _startNavigation(widget.destination!);
         }
       });
     } catch (e) {
-      //print('Error getting location: $e');
+      // Handle error here
     }
   }
 
-  LatLng _getDestinationFromDistance() {
-    if (distanceVariableAvailable()) {
-      // Example logic: Assuming you have a certain distance (in km) to compute destination
-      // Adjust the destination calculation based on your logic.
-      double newLatitude =
-          _currentPosition!.latitude + 0.01; // For example purposes
-      double newLongitude = _currentPosition!.longitude + 0.01;
-      return LatLng(newLatitude, newLongitude);
-    }
-    return widget.destination!;
+  // void _updateCurrentLocation(LatLng newPosition) {
+  //   setState(() {
+  //     _currentPosition = newPosition;
+  //     _circles = {
+  //       Circle(
+  //         circleId: CircleId('current_location'),
+  //         center: _currentPosition!,
+  //         radius: 20,
+  //         fillColor: Colors.blue.withOpacity(0.3),
+  //         strokeColor: Colors.blueAccent,
+  //         strokeWidth: 2,
+  //       ),
+  //     };
+
+  //     // No camera movement here, as it is done only once in `_onMapCreated`
+  //   });
+  // }
+
+  void _updateCurrentLocation(LatLng newPosition) {
+    setState(() {
+      _currentPosition = newPosition;
+      _circles = {
+        Circle(
+          circleId: CircleId('current_location'),
+          center: _currentPosition!,
+          radius: 20,
+          fillColor: Colors.blue.withOpacity(0.3),
+          strokeColor: Colors.blueAccent,
+          strokeWidth: 2,
+        ),
+      };
+    });
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(_currentPosition!, 16),
+    );
   }
 
-  bool distanceVariableAvailable() {
-    // Replace with your logic to check if distance variable is available
-    return false; // Example value
-  }
-
-  Future<void> _fetchNearbyPlaces() async {
+  Future<void> _fetchNearbyCarWashes() async {
     if (_currentPosition == null) return;
 
-    final String baseUrl =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
-    final String location =
-        '${_currentPosition!.latitude},${_currentPosition!.longitude}';
-    final String radius = '5000'; // 5 km search radius
-    final String type = 'car_wash|car_repair'; // Specify the type of places
     final String url =
-        '$baseUrl?location=$location&radius=$radius&type=$type&key=$_placesApiKey';
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentPosition!.latitude},${_currentPosition!.longitude}&radius=5000&type=car_wash&key=$_placesApiKey';
 
     try {
       final response = await http.get(Uri.parse(url));
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> places = data['results'];
-
-        setState(() {
-          _markers.clear(); // Clear old markers
-          for (var place in places) {
-            final LatLng placeLocation = LatLng(
-              place['geometry']['location']['lat'],
-              place['geometry']['location']['lng'],
-            );
-            _markers.add(
-              Marker(
-                markerId: MarkerId(place['place_id']),
-                position: placeLocation,
-                infoWindow: InfoWindow(
-                  title:
-                      '${place['name']} 🟦', // Add blue square as a visual aid
-                  snippet: '${place['vicinity']} 🟩', // Add green square emoji
-                ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueBlue),
-              ),
-            );
-          }
-        });
+        print(places); // Log to check if places are fetched correctly
+        _updateMarkers(places);
       } else {
-        print('Failed to load nearby places: ${response.statusCode}');
+        print('Error fetching carwashes: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching nearby places: $e');
+      print('Error fetching carwashes: $e');
     }
+  }
+
+  void _updateMarkers(List<dynamic> places) {
+    setState(() {
+      _markers.clear();
+      for (var place in places) {
+        final LatLng placeLocation = LatLng(
+          place['geometry']['location']['lat'],
+          place['geometry']['location']['lng'],
+        );
+        print('Adding marker at: $placeLocation'); // Log marker position
+
+        _markers.add(
+          Marker(
+            markerId: MarkerId(place['place_id']),
+            position: placeLocation,
+            infoWindow: InfoWindow(
+              title: '${place['name']} 🟦',
+              snippet: '${place['vicinity']} 🟩',
+            ),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> _startNavigation(LatLng destination) async {
     if (_currentPosition == null) return;
 
-    final String baseUrl =
-        'https://maps.googleapis.com/maps/api/directions/json';
-    final String origin =
-        '${_currentPosition!.latitude},${_currentPosition!.longitude}';
-    final String dest = '${destination.latitude},${destination.longitude}';
     final String url =
-        '$baseUrl?origin=$origin&destination=$dest&key=$_directionsApiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${_currentPosition!.latitude},${_currentPosition!.longitude}&destination=${destination.latitude},${destination.longitude}&key=$_directionsApiKey';
 
     try {
       final response = await http.get(Uri.parse(url));
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<dynamic> routes = data['routes'];
-
-        if (routes.isNotEmpty) {
-          final polylinePoints = routes[0]['overview_polyline']['points'];
-          final polyline = _convertToLatLng(polylinePoints);
-
-          setState(() {
-            _polylines.clear(); // Clear previous polylines
-            _polylines.add(
-              Polyline(
-                polylineId: PolylineId('route'),
-                points: polyline,
-                color: Colors.blue,
-                width: 5,
-              ),
-            );
-            _markers.add(
-              Marker(
-                markerId: MarkerId('destination'),
-                position: destination,
-                infoWindow: InfoWindow(
-                  title: 'Destination',
-                ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueGreen),
-              ),
-            );
-          });
-
-          // _mapController?.animateCamera(
-          //   CameraUpdate.newLatLngBounds(
-          //     LatLngBounds(
-          //       southwest: LatLng(
-          //         _currentPosition!.latitude < destination.latitude
-          //             ? _currentPosition!.latitude
-          //             : destination.latitude,
-          //         _currentPosition!.longitude < destination.longitude
-          //             ? _currentPosition!.longitude
-          //             : destination.longitude,
-          //       ),
-          //       northeast: LatLng(
-          //         _currentPosition!.latitude > destination.latitude
-          //             ? _currentPosition!.latitude
-          //             : destination.latitude,
-          //         _currentPosition!.longitude > destination.longitude
-          //             ? _currentPosition!.longitude
-          //             : destination.longitude,
-          //       ),
-          //     ),
-          //     50, // Padding
-          //   ),
-          // );
-        }
-      } else {
-        //print('Failed to get directions: ${response.statusCode}');
+        final polylinePoints = data['routes'][0]['overview_polyline']['points'];
+        _drawRoute(_convertToLatLng(polylinePoints), destination);
       }
     } catch (e) {
-      //print('Error getting directions: $e');
+      // Handle error here
     }
+  }
+
+  void _drawRoute(List<LatLng> routePoints, LatLng destination) {
+    setState(() {
+      _polylines = {
+        Polyline(
+          polylineId: PolylineId('route'),
+          points: routePoints,
+          color: Colors.blue,
+          width: 5,
+        ),
+      };
+      _markers.add(
+        Marker(
+          markerId: MarkerId('destination'),
+          position: destination,
+          infoWindow: InfoWindow(title: 'Destination'),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+      );
+    });
   }
 
   List<LatLng> _convertToLatLng(String encodedPoints) {
@@ -296,17 +250,12 @@ class _MapPageState extends State<MapPage> {
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
-
-    // Apply custom map style
     _mapController!.setMapStyle(MapStyle.style);
-
-    setState(() {
-      if (_currentPosition != null) {
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(_currentPosition!, 22),
-        );
-      }
-    });
+    if (_currentPosition != null) {
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(_currentPosition!, 16),
+      );
+    }
   }
 
   void _onSearchActive(bool isActive) {
@@ -318,73 +267,89 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          flexibleSpace: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                'assets/carwash.jpg',
-                fit: BoxFit.cover,
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.blue.withOpacity(0.7),
-                      Colors.blueAccent.withOpacity(0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          title: Text('Hi, Arnold!', style: TextStyle(color: Colors.white)),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.notifications, color: Colors.white),
-              onPressed: () {},
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 18),
-              child: CircleAvatar(
-                backgroundImage: AssetImage('assets/images/avatar.png'),
-              ),
-            ),
-          ],
-          bottom: PreferredSize(
-            preferredSize: Size.fromHeight(kToolbarHeight),
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Search_Bar(
-                onSearchActive: _onSearchActive,
-              ),
-            ),
-          ),
-        ),
-        body: Stack(children: [
+      // appBar: AppBar(
+      //   flexibleSpace: Stack(
+      //     fit: StackFit.expand,
+      //     children: [
+      //       Image.asset('assets/carwash.jpg', fit: BoxFit.cover),
+      //       Container(
+      //         decoration: BoxDecoration(
+      //           gradient: LinearGradient(
+      //             colors: [
+      //               Colors.blue.withOpacity(0.7),
+      //               Colors.blueAccent.withOpacity(0.7)
+      //             ],
+      //             begin: Alignment.topLeft,
+      //             end: Alignment.bottomRight,
+      //           ),
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      //   title: Text('Hi, Arnold!', style: TextStyle(color: Colors.white)),
+      //   actions: [
+      //     IconButton(
+      //         icon: Icon(Icons.notifications, color: Colors.white),
+      //         onPressed: () {}),
+      //     Container(
+      //       padding: EdgeInsets.symmetric(horizontal: 18),
+      //       child: CircleAvatar(
+      //           backgroundImage: AssetImage('assets/images/avatar.png')),
+      //     ),
+      //   ],
+      //   bottom: PreferredSize(
+      //     preferredSize: Size.fromHeight(kToolbarHeight),
+      //     child: Padding(
+      //       padding: EdgeInsets.all(8.0),
+      //       child: Search_Bar(
+      //         onSearchActive: _onSearchActive,
+      //       ),
+      //     ),
+      //   ),
+      // ),
+      body: Stack(
+        children: [
           GoogleMap(
             onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
               target: _center,
-              zoom: 15.5,
+              zoom: 12.0,
             ),
             markers: _markers,
             polylines: _polylines,
             circles: _circles,
             myLocationEnabled: true,
-            myLocationButtonEnabled: true,
+            zoomControlsEnabled: false,
           ),
+          if (_isSearchActive)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => _onSearchActive(false),
+                child: Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+            ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(
-                  bottom: 16.0), // Add padding for spacing
-              child:
-                  ServiceProvider(), // The horizontal list of service providers
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: PreferredSize(
+                preferredSize: Size.fromHeight(kToolbarHeight),
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Search_Bar(
+                    onSearchActive: _onSearchActive,
+                  ),
+                ),
+              ),
             ),
           ),
-        ]));
+        ],
+      ),
+    );
   }
 }

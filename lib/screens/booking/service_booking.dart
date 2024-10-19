@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../models/booking_info.dart';
 import 'booking_summary.dart';
 
 class ServiceBookingPage extends StatefulWidget {
+  final BookingInfo bookingInfo;
+
+  ServiceBookingPage({required this.bookingInfo});
+
   @override
   _ServiceBookingPageState createState() => _ServiceBookingPageState();
 }
@@ -11,7 +16,6 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
   String _selectedService = 'Car Wash';
   DateTime _selectedDate = DateTime.now();
   String? _selectedTimeSlot;
-
   List<String> timeSlots = ['08:00 am', '08:45 am', '09:30 am', '10:15 am'];
 
   _pickDate() async {
@@ -30,17 +34,23 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
 
   _submitBooking() {
     if (_formKey.currentState!.validate() && _selectedTimeSlot != null) {
-      _formKey.currentState!.save();
+      // Update the bookingInfo with selected service, date, and time
+      widget.bookingInfo.service = _selectedService;
+      widget.bookingInfo.date = _selectedDate;
+      widget.bookingInfo.timeSlot = _selectedTimeSlot!;
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => BookingSummary(
-            service: _selectedService,
-            date: _selectedDate,
-            time: TimeOfDay(
-              hour: int.parse(_selectedTimeSlot!.split(':')[0]),
-              minute: int.parse(_selectedTimeSlot!.split(':')[1].split(' ')[0]),
-            ),
+            service: widget.bookingInfo.service,
+            date: widget.bookingInfo.date,
+            time: TimeOfDay
+                .now(), // Assuming you want to pass the current time for now
+            userName:
+                widget.bookingInfo.customerName, // Replace with actual property
+            userPhone: widget.bookingInfo.phone, // Replace with actual property
+            address: widget.bookingInfo.address, // Replace with actual property
           ),
         ),
       );
@@ -51,7 +61,10 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Book A Wash'),
+        title: Text('Book A Wash',
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -60,7 +73,6 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Service Dropdown
               DropdownButtonFormField<String>(
                 value: _selectedService,
                 decoration: InputDecoration(labelText: 'Service Type'),
@@ -77,16 +89,6 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
                 },
               ),
               SizedBox(height: 16),
-
-              // Custom Calendar UI
-              Text(
-                'Select Date',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
               GestureDetector(
                 onTap: _pickDate,
                 child: Container(
@@ -107,65 +109,40 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Date: ${_selectedDate.toLocal()}'.split(' ')[0],
-                        style: TextStyle(fontSize: 16),
-                      ),
+                          'Date: ${_selectedDate.toLocal().toString().split(' ')[0]}',
+                          style: TextStyle(fontSize: 16)),
                       Icon(Icons.calendar_today, color: Colors.blue),
                     ],
                   ),
                 ),
               ),
               SizedBox(height: 16),
-
-              // Hour Selection UI
-              Text(
-                'Hour',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Time Slot',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               SizedBox(height: 8),
-              Wrap(
-                spacing: 10.0,
-                runSpacing: 10.0,
-                children: timeSlots.map((time) {
-                  bool isSelected = _selectedTimeSlot == time;
-                  return ChoiceChip(
-                    label: Text(
-                      time,
-                      style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.blue),
-                    ),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedTimeSlot = time;
-                      });
-                    },
-                    selectedColor: Colors.blue,
-                    backgroundColor: Colors.white,
-                    elevation: 1.0,
-                  );
-                }).toList(),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: 'Select Time Slot'),
+                items: timeSlots
+                    .map((time) => DropdownMenuItem(
+                          child: Text(time),
+                          value: time,
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedTimeSlot = val;
+                  });
+                },
               ),
-              SizedBox(height: 16),
-
-              // Submit Button
+              Spacer(),
               Center(
                 child: ElevatedButton(
-                  onPressed: _submitBooking,
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    padding: EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                     backgroundColor: Colors.blue,
                   ),
-                  child: Text(
-                    'NEXT',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
+                  onPressed: _submitBooking,
+                  child: Text('CONTINUE'),
                 ),
               ),
             ],
