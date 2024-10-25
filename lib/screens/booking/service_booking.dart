@@ -72,13 +72,17 @@ class _ServiceBookingPageState extends State<ServiceBookingPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Choose Your Service',
-          style: TextStyle(color: themeColor, fontWeight: FontWeight.bold),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
-        backgroundColor: Colors.white,
+        title: Text('Choose Your Service',
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: themeColor),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

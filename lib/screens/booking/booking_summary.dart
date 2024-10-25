@@ -47,7 +47,7 @@ class _BookingSummaryState extends State<BookingSummary> {
             Navigator.pop(context);
           },
         ),
-        title: Text('Book A Wash',
+        title: Text('Confirm Booking',
             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
