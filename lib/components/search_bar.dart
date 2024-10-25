@@ -24,30 +24,30 @@ class _Search_BarState extends State<Search_Bar> {
     }
   }
 
-  void _onSearchFieldTapped() {
-    setState(() {
-      _isSearchActive = true; // Activate search when field is tapped
-    });
-    widget.onSearchActive(true); // Notify parent about active search
-    _showSearchModal(); // Show the modal with available service providers
-  }
+  // void _onSearchFieldTapped() {
+  //   setState(() {
+  //     _isSearchActive = true; // Activate search when field is tapped
+  //   });
+  //   widget.onSearchActive(true); // Notify parent about active search
+  //   _showSearchModal(); // Show the modal with available service providers
+  // }
 
   // Modal to display service providers
-  void _showSearchModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ServiceProviderModal(),
-    );
-  }
+  // void _showSearchModal() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => ServiceProviderModal(),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: _searchController,
       onChanged: _onSearchChanged,
-      onTap: _onSearchFieldTapped,
+      //onTap: _onSearchFieldTapped,
       decoration: InputDecoration(
         hintText: 'Search for services...',
         suffixIcon: Icon(Icons.search),

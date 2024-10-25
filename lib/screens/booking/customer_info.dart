@@ -8,15 +8,43 @@ class CustomerPreBookingInfo extends StatefulWidget {
 }
 
 class _CustomerPreBookingInfoState extends State<CustomerPreBookingInfo> {
-  final TextEditingController _nameController = TextEditingController(text: 'Moe Jehad');
-  final TextEditingController _phoneController = TextEditingController(text: '+145987654321');
-  final TextEditingController _addressController = TextEditingController(text: '10220 104 Ave NW, Edmonton, AB T5J 1B8, Canada');
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _makeController = TextEditingController();
   final TextEditingController _colorController = TextEditingController();
   final TextEditingController _modelController = TextEditingController();
   final TextEditingController _plateNumberController = TextEditingController();
   final TextEditingController _instructionController = TextEditingController();
   final TextEditingController _emailController = TextEditingController(); // Added email field
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _makeController.dispose();
+    _colorController.dispose();
+    _modelController.dispose();
+    _plateNumberController.dispose();
+    _instructionController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  bool _validateFields() {
+    if (_nameController.text.isEmpty ||
+        _phoneController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _addressController.text.isEmpty) {
+      // Show error dialog or message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all required fields')),
+      );
+      return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,26 +100,28 @@ class _CustomerPreBookingInfoState extends State<CustomerPreBookingInfo> {
                   backgroundColor: Colors.blue,
                 ),
                 onPressed: () {
-                  // Gather all data into a BookingInfo model
-                  BookingInfo bookingInfo = BookingInfo(
-                    customerName: _nameController.text,
-                    phone: _phoneController.text,
-                    address: _addressController.text,
-                    carMake: _makeController.text,
-                    carColor: _colorController.text,
-                    carModel: _modelController.text,
-                    plateNumber: _plateNumberController.text,
-                    instruction: _instructionController.text,
-                    service: 'Car Wash', // Placeholder for now
-                    date: DateTime.now(), // Placeholder, set in ServiceBookingPage
-                    timeSlot: '', // Placeholder, set in ServiceBookingPage
-                    email: _emailController.text, // Added email information
-                  );
-                  // Navigate to ServiceBookingPage and pass BookingInfo
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ServiceBookingPage(bookingInfo: bookingInfo)),
-                  );
+                  if (_validateFields()) {
+                    // Gather all data into a BookingInfo model
+                    BookingInfo bookingInfo = BookingInfo(
+                      customerName: _nameController.text,
+                      phone: _phoneController.text,
+                      address: _addressController.text,
+                      carMake: _makeController.text,
+                      carColor: _colorController.text,
+                      carModel: _modelController.text,
+                      plateNumber: _plateNumberController.text,
+                      instruction: _instructionController.text,
+                      service: 'Car Wash', // Placeholder for now
+                      date: DateTime.now(), // Placeholder, set in ServiceBookingPage
+                      timeSlot: '', // Placeholder, set in ServiceBookingPage
+                      email: _emailController.text, // Added email information
+                    );
+                    // Navigate to ServiceBookingPage and pass BookingInfo
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ServiceBookingPage(bookingInfo: bookingInfo)),
+                    );
+                  }
                 },
                 child: Text('NEXT', style: TextStyle(fontSize: 16.0, color: Colors.white)),
               ),

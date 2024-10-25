@@ -37,6 +37,8 @@ dependencies:
   url_launcher: ^6.3.0
   http: ^1.2.2
   shared_preferences: ^2.3.2
+  flutter_local_notifications: ^13.0.0
+  intl_utils: ^2.8.7
 
 
 

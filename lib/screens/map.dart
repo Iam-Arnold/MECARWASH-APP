@@ -1,17 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../components/search_bar.dart';
-import '../components/service_provider.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../theme/map_style.dart';
 
 class MapPage extends StatefulWidget {
-  final LatLng? destination; // Make destination optional
+  final LatLng? destination;
 
-  MapPage({this.destination}); // Make destination optional
+  MapPage({this.destination});
 
   @override
   _MapPageState createState() => _MapPageState();
@@ -23,21 +23,67 @@ class _MapPageState extends State<MapPage> {
   Set<Marker> _markers = Set<Marker>();
   Set<Polyline> _polylines = Set<Polyline>();
   Set<Circle> _circles = Set<Circle>();
-  bool _isSearchActive = false;
-  bool _initialCameraSet = false;
 
   final LatLng _center = const LatLng(-6.778567437130798, 39.26381723392923);
-
   final String _placesApiKey = 'AIzaSyB4Hz_DKceY_QL0jg4ID7Hy_653UlZb5Qg';
   final String _directionsApiKey = 'AIzaSyB4Hz_DKceY_QL0jg4ID7Hy_653UlZb5Qg';
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  bool _journeyStarted = false;
+  bool _arrivalNotified =
+      false; // Flag to track if arrival notification was sent
+  final double _arrivalThreshold = 50.0; // Distance in meters to notify arrival
 
   @override
   void initState() {
     super.initState();
     _checkPermissions();
-    //     _mapController?.animateCamera(
-    //   CameraUpdate.newLatLngZoom(_currentPosition!, 16),
-    // );
+    _initializeNotifications(); // Initialize notifications
+  }
+
+  // Initialize the local notifications plugin and request permissions
+  Future<void> _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher'); // App icon
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // Request notification permissions explicitly
+    _requestNotificationPermission();
+  }
+
+  // Request permission for notifications
+  Future<void> _requestNotificationPermission() async {
+    var status = await Permission.notification.status;
+    if (!status.isGranted) {
+      await Permission.notification.request();
+    }
+  }
+
+  // Show notification
+  Future<void> _showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
   }
 
   Future<void> _checkPermissions() async {
@@ -51,12 +97,10 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _getCurrentLocation() async {
     try {
-      //developer.log('The destination details: $widget.destination');
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       _updateCurrentLocation(LatLng(position.latitude, position.longitude));
 
-      // Fetch nearby carwashes and start navigation if destination is provided
       _fetchNearbyCarWashes();
       if (widget.destination != null) {
         _startNavigation(widget.destination!);
@@ -70,31 +114,13 @@ class _MapPageState extends State<MapPage> {
         _updateCurrentLocation(
             LatLng(newPosition.latitude, newPosition.longitude));
         if (widget.destination != null) {
-          _startNavigation(widget.destination!);
+          _checkJourneyProgress(newPosition, widget.destination!);
         }
       });
     } catch (e) {
       // Handle error here
     }
   }
-
-  // void _updateCurrentLocation(LatLng newPosition) {
-  //   setState(() {
-  //     _currentPosition = newPosition;
-  //     _circles = {
-  //       Circle(
-  //         circleId: CircleId('current_location'),
-  //         center: _currentPosition!,
-  //         radius: 20,
-  //         fillColor: Colors.blue.withOpacity(0.3),
-  //         strokeColor: Colors.blueAccent,
-  //         strokeWidth: 2,
-  //       ),
-  //     };
-
-  //     // No camera movement here, as it is done only once in `_onMapCreated`
-  //   });
-  // }
 
   void _updateCurrentLocation(LatLng newPosition) {
     setState(() {
@@ -165,6 +191,11 @@ class _MapPageState extends State<MapPage> {
   Future<void> _startNavigation(LatLng destination) async {
     if (_currentPosition == null) return;
 
+    if (!_journeyStarted) {
+      _journeyStarted = true;
+      _showNotification("Journey Started", "Heading towards the destination");
+    }
+
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${_currentPosition!.latitude},${_currentPosition!.longitude}&destination=${destination.latitude},${destination.longitude}&key=$_directionsApiKey';
 
@@ -177,6 +208,23 @@ class _MapPageState extends State<MapPage> {
       }
     } catch (e) {
       // Handle error here
+    }
+  }
+
+  // Check journey progress and notify when close to destination
+  void _checkJourneyProgress(Position currentPosition, LatLng destination) {
+    double distance = Geolocator.distanceBetween(
+      currentPosition.latitude,
+      currentPosition.longitude,
+      destination.latitude,
+      destination.longitude,
+    );
+
+    print('Current distance to destination: $distance meters');
+
+    if (distance < _arrivalThreshold && !_arrivalNotified) {
+      _arrivalNotified = true;
+      _showNotification("Arrived", "You have arrived at your destination");
     }
   }
 
@@ -215,34 +263,29 @@ class _MapPageState extends State<MapPage> {
       int result = 0;
 
       do {
-        b = encodedPoints.codeUnitAt(index) - 63;
-        index++;
-        result |= (b & 0x1f) << shift;
+        b = encodedPoints.codeUnitAt(index++) - 63;
+        result |= (b & 0x1F) << shift;
         shift += 5;
       } while (b >= 0x20);
 
-      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
       lat += dlat;
 
       shift = 0;
       result = 0;
 
       do {
-        b = encodedPoints.codeUnitAt(index) - 63;
-        index++;
-        result |= (b & 0x1f) << shift;
+        b = encodedPoints.codeUnitAt(index++) - 63;
+        result |= (b & 0x1F) << shift;
         shift += 5;
       } while (b >= 0x20);
 
-      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
       lng += dlng;
 
-      points.add(
-        LatLng(
-          (lat / 1E5).toDouble(),
-          (lng / 1E5).toDouble(),
-        ),
-      );
+      final LatLng point =
+          LatLng((lat / 1E5).toDouble(), (lng / 1E5).toDouble());
+      points.add(point);
     }
 
     return points;
@@ -258,94 +301,42 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _onSearchActive(bool isActive) {
-    setState(() {
-      _isSearchActive = isActive;
-    });
+  Future<void> _locateUser() async {
+    if (_currentPosition != null) {
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(_currentPosition!, 16),
+      );
+    } else {
+      await _getCurrentLocation(); // Get location if it's null
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   flexibleSpace: Stack(
-      //     fit: StackFit.expand,
-      //     children: [
-      //       Image.asset('assets/carwash.jpg', fit: BoxFit.cover),
-      //       Container(
-      //         decoration: BoxDecoration(
-      //           gradient: LinearGradient(
-      //             colors: [
-      //               Colors.blue.withOpacity(0.7),
-      //               Colors.blueAccent.withOpacity(0.7)
-      //             ],
-      //             begin: Alignment.topLeft,
-      //             end: Alignment.bottomRight,
-      //           ),
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      //   title: Text('Hi, Arnold!', style: TextStyle(color: Colors.white)),
-      //   actions: [
-      //     IconButton(
-      //         icon: Icon(Icons.notifications, color: Colors.white),
-      //         onPressed: () {}),
-      //     Container(
-      //       padding: EdgeInsets.symmetric(horizontal: 18),
-      //       child: CircleAvatar(
-      //           backgroundImage: AssetImage('assets/images/avatar.png')),
-      //     ),
-      //   ],
-      //   bottom: PreferredSize(
-      //     preferredSize: Size.fromHeight(kToolbarHeight),
-      //     child: Padding(
-      //       padding: EdgeInsets.all(8.0),
-      //       child: Search_Bar(
-      //         onSearchActive: _onSearchActive,
-      //       ),
-      //     ),
-      //   ),
-      // ),
       body: Stack(
         children: [
           GoogleMap(
             onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
               target: _center,
-              zoom: 12.0,
+              zoom: 16.0,
             ),
             markers: _markers,
             polylines: _polylines,
             circles: _circles,
-            myLocationEnabled: true,
+            myLocationEnabled: false,
             zoomControlsEnabled: false,
           ),
-          if (_isSearchActive)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () => _onSearchActive(false),
-                child: Container(
-                  color: Colors.black54,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              ),
-            ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: PreferredSize(
-                preferredSize: Size.fromHeight(kToolbarHeight),
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Search_Bar(
-                    onSearchActive: _onSearchActive,
-                  ),
-                ),
-              ),
+          Positioned(
+            top: 80, // Adjust this value to position the button as needed
+            right: 10,
+            child: FloatingActionButton(
+              backgroundColor:
+                  Colors.lightBlue, // Set button color to light blue
+              onPressed: _locateUser,
+              child: Icon(Icons.my_location,
+                  color: Colors.white), // Set icon color to white
             ),
           ),
         ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../screens/sp_detail_page.dart';
 
 class ServiceProviderModal extends StatelessWidget {
@@ -50,10 +49,10 @@ class ServiceProviderModal extends StatelessWidget {
                     return ListTile(
                       leading: Icon(Icons.local_car_wash, color: Colors.blue),
                       title: Text(provider['name']),
-                      subtitle: Text('Cuisine: ${provider['cuisine']} • ${provider['distance']}'),
+                      subtitle: Text('Service: ${provider['cuisine']} • ${provider['distance']}'),
                       onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to the ServiceProviderDetailPage
+                        Navigator.pop(context); // Close the modal
+                        // Navigate to ServiceProviderDetailPage with provider details
                         Navigator.push(
                           context,
                           MaterialPageRoute(
