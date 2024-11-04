@@ -25,8 +25,8 @@ class _MapPageState extends State<MapPage> {
   Set<Circle> _circles = Set<Circle>();
 
   final LatLng _center = const LatLng(-6.778567437130798, 39.26381723392923);
-  final String _placesApiKey = 'AIzaSyB4Hz_DKceY_QL0jg4ID7Hy_653UlZb5Qg';
-  final String _directionsApiKey = 'AIzaSyB4Hz_DKceY_QL0jg4ID7Hy_653UlZb5Qg';
+  final String _placesApiKey = 'XXX';
+  final String _directionsApiKey = 'XXX';
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
